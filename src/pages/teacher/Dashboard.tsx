@@ -10,6 +10,7 @@ import SubjectDashboard from './SubjectDashboard';
 import BatchManagement from './BatchManagement';
 import { useQuestionStore } from '../../store/questionStore';
 import toast from 'react-hot-toast';
+import { FileText, Plus, BookOpen } from 'lucide-react';
 
 const TeacherDashboard = () => {
   const { user } = useAuthStore();
@@ -41,6 +42,13 @@ const TeacherDashboard = () => {
           <div className="space-y-6 p-6">
             <div className="flex justify-between items-center">
               <h1 className="text-2xl font-bold text-gray-900">Teacher Dashboard</h1>
+              <button
+                onClick={() => navigate('/teacher/questions')}
+                className="flex items-center px-4 py-2 text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 transition-colors"
+              >
+                <FileText className="w-5 h-5 mr-2" />
+                Generate Questions
+              </button>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -62,8 +70,40 @@ const TeacherDashboard = () => {
                   }`}>
                     {assignment.isLab ? 'Lab' : 'Theory'}
                   </span>
+                  <div className="mt-4 flex space-x-3">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        navigate(`/teacher/subject/${assignment.id}/questions`);
+                      }}
+                      className="flex items-center px-3 py-2 text-sm font-medium text-indigo-600 bg-indigo-50 rounded-md hover:bg-indigo-100"
+                    >
+                      <FileText className="w-4 h-4 mr-2" />
+                      Generate Questions
+                    </button>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        navigate(`/teacher/subject/${assignment.id}/exam-setup`);
+                      }}
+                      className="flex items-center px-3 py-2 text-sm font-medium text-green-600 bg-green-50 rounded-md hover:bg-green-100"
+                    >
+                      <Plus className="w-4 h-4 mr-2" />
+                      Setup Exam
+                    </button>
+                  </div>
                 </div>
               ))}
+
+              {assignments.length === 0 && (
+                <div className="col-span-full text-center py-12">
+                  <BookOpen className="mx-auto h-12 w-12 text-gray-400" />
+                  <h3 className="mt-2 text-sm font-medium text-gray-900">No Subjects Assigned</h3>
+                  <p className="mt-1 text-sm text-gray-500">
+                    You haven't been assigned any subjects yet.
+                  </p>
+                </div>
+              )}
             </div>
 
             <DeployedExams />
