@@ -1,6 +1,6 @@
-// src/store/questionStore.ts
 import { create } from 'zustand';
 import { Question } from '../types/exam';
+import toast from 'react-hot-toast';
 
 interface QuestionState {
   questions: Question[];
@@ -18,28 +18,49 @@ export const useQuestionStore = create<QuestionState>((set, get) => ({
   questionsToDeploy: [],
 
   addQuestion: (questionData) => {
-    const newQuestion: Question = {
-      id: Date.now().toString(),
-      ...questionData,
-    };
+    try {
+      const newQuestion: Question = {
+        id: Date.now().toString(),
+        ...questionData,
+      };
 
-    set((state) => ({
-      questions: [...state.questions, newQuestion],
-    }));
+      set((state) => ({
+        questions: [...state.questions, newQuestion],
+      }));
+
+      toast.success('Question added successfully');
+      return newQuestion;
+    } catch (error) {
+      toast.error('Failed to add question');
+      throw error;
+    }
   },
 
   updateQuestion: (id, questionData) => {
-    set((state) => ({
-      questions: state.questions.map((question) =>
-        question.id === id ? { ...question, ...questionData } : question
-      ),
-    }));
+    try {
+      set((state) => ({
+        questions: state.questions.map((question) =>
+          question.id === id ? { ...question, ...questionData } : question
+        ),
+      }));
+      toast.success('Question updated successfully');
+    } catch (error) {
+      toast.error('Failed to update question');
+      throw error;
+    }
   },
 
   deleteQuestion: (id) => {
-    set((state) => ({
-      questions: state.questions.filter((question) => question.id !== id),
-    }));
+    try {
+      set((state) => ({
+        questions: state.questions.filter((question) => question.id !== id),
+        questionsToDeploy: state.questionsToDeploy.filter((question) => question.id !== id),
+      }));
+      toast.success('Question deleted successfully');
+    } catch (error) {
+      toast.error('Failed to delete question');
+      throw error;
+    }
   },
 
   getQuestionsBySubject: (subjectId) => {
