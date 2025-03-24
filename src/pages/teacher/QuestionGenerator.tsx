@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
 import { useTeacherStore } from '../../store/teacherStore';
 import { useAuthStore } from '../../store/authStore';
 import { FileText, Plus, BookOpen } from 'lucide-react';
@@ -10,12 +10,20 @@ import SubjectSelector from './components/SubjectSelector';
 
 const QuestionGenerator = () => {
   const navigate = useNavigate();
+  const { subjectId } = useParams(); // Get subjectId from URL params
   const { user } = useAuthStore();
   const [method, setMethod] = useState<'document' | 'manual' | 'topic'>('document');
-  const [selectedSubject, setSelectedSubject] = useState('');
+  const [selectedSubject, setSelectedSubject] = useState(subjectId || '');
   const { getTeacherAssignments } = useTeacherStore();
 
   const assignments = user ? getTeacherAssignments(user.id) : [];
+
+  // Update selectedSubject when subjectId param changes
+  useEffect(() => {
+    if (subjectId) {
+      setSelectedSubject(subjectId);
+    }
+  }, [subjectId]);
 
   const handleSubjectChange = (subjectId: string) => {
     setSelectedSubject(subjectId);
@@ -23,7 +31,6 @@ const QuestionGenerator = () => {
 
   const handleQuestionsGenerated = () => {
     // Optionally handle post-generation actions
-    // For example, show a success message or redirect
   };
 
   return (
@@ -45,12 +52,14 @@ const QuestionGenerator = () => {
         </button>
       </div>
 
-      <div className="mb-6">
-        <SubjectSelector
-          selectedSubject={selectedSubject}
-          onSubjectChange={handleSubjectChange}
-        />
-      </div>
+      {!subjectId && ( // Only show subject selector if subjectId is not in URL
+        <div className="mb-6">
+          <SubjectSelector
+            selectedSubject={selectedSubject}
+            onSubjectChange={handleSubjectChange}
+          />
+        </div>
+      )}
 
       {selectedSubject && (
         <>
@@ -137,4 +146,4 @@ const QuestionGenerator = () => {
   );
 };
 
-export default QuestionGenerator;
+export default QuestionGenerator

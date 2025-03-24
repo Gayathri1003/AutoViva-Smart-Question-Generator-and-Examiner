@@ -24,6 +24,11 @@ const SubjectCard: React.FC<SubjectCardProps> = ({ assignment }) => {
     navigate(`/teacher/subject/${assignment.id}/exam-setup`);
   };
 
+  const handleBatchManagement = (e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent card click event
+    navigate(`/teacher/subject/${assignment.id}/batches`);
+  };
+
   return (
     <div 
       className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow cursor-pointer"
@@ -63,7 +68,7 @@ const SubjectCard: React.FC<SubjectCardProps> = ({ assignment }) => {
           </div>
         </div>
 
-        <div className="mt-6 grid grid-cols-3 gap-3">
+        <div className="mt-6 grid grid-cols-2 gap-3">
           <button
             onClick={handleGenerateQuestions}
             className="flex items-center justify-center px-3 py-2 text-sm font-medium text-indigo-600 bg-indigo-50 rounded-md hover:bg-indigo-100 transition-colors"
@@ -79,16 +84,14 @@ const SubjectCard: React.FC<SubjectCardProps> = ({ assignment }) => {
             Setup Exam
           </button>
           <button
-            onClick={handleViewSubject}
-            className="flex items-center justify-center px-3 py-2 text-sm font-medium text-blue-600 bg-blue-50 rounded-md hover:bg-blue-100 transition-colors"
+            onClick={handleBatchManagement}
+            className="flex items-center justify-center px-3 py-2 text-sm font-medium text-blue-600 bg-blue-50 rounded-md hover:bg-blue-100 transition-colors col-span-2"
           >
-            <Icons.ChartBar className="w-4 h-4 mr-2" />
-            View Details
+            <Icons.Users className="w-4 h-4 mr-2" />
+            Manage Batches
           </button>
         </div>
       </div>
     </div>
   );
 };
-
-export default SubjectCard;

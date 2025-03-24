@@ -1,4 +1,3 @@
-// src/App.tsx
 import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
@@ -10,7 +9,8 @@ import ProtectedRoute from './components/ProtectedRoute';
 import Layout from './components/Layout';
 import SubjectList from './pages/teacher/components/SubjectList';
 import QuestionGenerator from './pages/teacher/QuestionGenerator';
-import QuestionSetup from './pages/teacher/exam/QuestionSetup'
+import QuestionSetup from './pages/teacher/exam/QuestionSetup';
+import BatchManagement from './pages/teacher/BatchManagement';
 
 function App() {
   return (
@@ -43,10 +43,14 @@ function App() {
                   <Route index element={<TeacherDashboard />} />
                   {/* Subject list page */}
                   <Route path="subjects" element={<SubjectList />} />
-                  {/* Question generation page with subjectId */}
+                  {/* Question generation page */}
                   <Route path="subject/:subjectId/questions" element={<QuestionGenerator />} />
                   {/* Exam setup page */}
                   <Route path="subject/:subjectId/exam-setup" element={<QuestionSetup />} />
+                  {/* Batch management page */}
+                  <Route path="subject/:subjectId/batches" element={<BatchManagement />} />
+                  {/* General batch management */}
+                  <Route path="batches" element={<BatchManagement />} />
                 </Routes>
               </Layout>
             </ProtectedRoute>
