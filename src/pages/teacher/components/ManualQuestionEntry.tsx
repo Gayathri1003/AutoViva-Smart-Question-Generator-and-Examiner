@@ -1,4 +1,3 @@
-// src/pages/teacher/components/ManualQuestionEntry.tsx
 import { useState } from 'react';
 import toast from 'react-hot-toast';
 import { useQuestionStore } from '../../../store/questionStore';
@@ -11,7 +10,7 @@ interface ManualQuestionEntryProps {
 const ManualQuestionEntry: React.FC<ManualQuestionEntryProps> = ({ subjectId, onQuestionAdded }) => {
   const [text, setText] = useState('');
   const [options, setOptions] = useState(['', '', '', '']);
-  const [correctAnswer, setCorrectAnswer] = useState<'A' | 'B' | 'C' | 'D'>('A');
+  const [correctAnswer, setCorrectAnswer] = useState<number>(0);
   const [difficulty, setDifficulty] = useState<'easy' | 'medium' | 'hard'>('medium');
   const { addQuestion } = useQuestionStore();
 
@@ -31,22 +30,25 @@ const ManualQuestionEntry: React.FC<ManualQuestionEntryProps> = ({ subjectId, on
       return;
     }
 
-    addQuestion({
-      text,
-      options,
-      correct_answer: correctAnswer,
-      difficulty,
-      subject_id: subjectId,
-    });
+    try {
+      addQuestion({
+        text,
+        options,
+        correct_answer: correctAnswer,
+        difficulty,
+        subject_id: subjectId,
+      });
 
-    toast.success('Question added successfully!');
-    // Reset form
-    setText('');
-    setOptions(['', '', '', '']);
-    setCorrectAnswer('A');
-    setDifficulty('medium');
+      // Reset form
+      setText('');
+      setOptions(['', '', '', '']);
+      setCorrectAnswer(0);
+      setDifficulty('medium');
 
-    if (onQuestionAdded) onQuestionAdded();
+      if (onQuestionAdded) onQuestionAdded();
+    } catch (error) {
+      toast.error('Failed to add question');
+    }
   };
 
   return (
@@ -66,29 +68,23 @@ const ManualQuestionEntry: React.FC<ManualQuestionEntryProps> = ({ subjectId, on
         <label className="block text-sm font-medium text-gray-700 mb-2">Options</label>
         {options.map((option, index) => (
           <div key={index} className="mb-2">
-            <input
-              type="text"
-              value={option}
-              onChange={(e) => handleOptionChange(index, e.target.value)}
-              className="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-              placeholder={`Option ${String.fromCharCode(65 + index)}`}
-            />
+            <div className="flex items-center">
+              <input
+                type="radio"
+                checked={correctAnswer === index}
+                onChange={() => setCorrectAnswer(index)}
+                className="mr-2 h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300"
+              />
+              <input
+                type="text"
+                value={option}
+                onChange={(e) => handleOptionChange(index, e.target.value)}
+                className="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                placeholder={`Option ${String.fromCharCode(65 + index)}`}
+              />
+            </div>
           </div>
         ))}
-      </div>
-
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">Correct Answer</label>
-        <select
-          value={correctAnswer}
-          onChange={(e) => setCorrectAnswer(e.target.value as 'A' | 'B' | 'C' | 'D')}
-          className="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-        >
-          <option value="A">A</option>
-          <option value="B">B</option>
-          <option value="C">C</option>
-          <option value="D">D</option>
-        </select>
       </div>
 
       <div>
