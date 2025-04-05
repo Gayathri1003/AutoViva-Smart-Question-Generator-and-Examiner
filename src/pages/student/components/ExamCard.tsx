@@ -39,22 +39,36 @@ const ExamCard: React.FC<ExamCardProps> = ({ exam, onStart, status }) => {
       </div>
 
       <div className="mt-4 grid grid-cols-2 gap-4 text-sm">
-        {/* ... existing exam details ... */}
+        <div>
+          <span className="text-gray-500">Duration:</span>
+          <span className="ml-2 text-gray-900">{exam.duration_minutes} minutes</span>
+        </div>
+        <div>
+          <span className="text-gray-500">Total Marks:</span>
+          <span className="ml-2 text-gray-900">{exam.total_marks}</span>
+        </div>
+        <div>
+          <span className="text-gray-500">Pass Mark:</span>
+          <span className="ml-2 text-gray-900">{exam.pass_percentage}%</span>
+        </div>
+        <div>
+          <span className="text-gray-500">Status:</span>
+          <span className={`ml-2 font-medium ${
+            status === 'attended' ? 'text-green-600' : 'text-blue-600'
+          }`}>
+            {status === 'attended' ? 'Completed' : 'Not Started'}
+          </span>
+        </div>
       </div>
 
       {status === 'active' && active && onStart && (
-        <>
-          <p className="mt-4 text-xs text-red-600">
-            Note: Exam will enter fullscreen mode and tab switching is monitored.
-          </p>
-          <button
-            onClick={onStart}
-            className="mt-2 w-full flex justify-center items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700"
-          >
-            <Play className="w-4 h-4 mr-2" />
-            Start Exam
-          </button>
-        </>
+        <button
+          onClick={onStart}
+          className="mt-4 w-full flex justify-center items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700"
+        >
+          <Play className="w-4 h-4 mr-2" />
+          Start Exam
+        </button>
       )}
     </div>
   );
