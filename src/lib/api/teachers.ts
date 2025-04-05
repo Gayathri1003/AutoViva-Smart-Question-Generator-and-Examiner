@@ -1,88 +1,56 @@
-import { supabase } from '../supabase';
-import { Teacher } from '../../types';
+import axios from "axios"
+import type { Teacher } from "../../types"
 
-export async function getTeachers() {
-  const { data, error } = await supabase
-    .from('teachers')
-    .select(`
-      id,
-      users (
-        id,
-        name,
-        username,
-        email
-      ),
-      department,
-      subject_assignments (
-        subjects (
-          name
-        )
-      )
-    `);
+const API_URL = "http://localhost:5000/api"
 
-  if (error) {
-    throw new Error('Failed to fetch teachers');
-  }
+export async function getTeachers(): Promise<Teacher[]> {
+  const { data } = await axios.get(`${API_URL}/teachers`, {
+    headers: {
+      Authorization: `Bearer ${localStorage.getItem("token")}`,
+    },
+  })
 
-  return data.map((teacher: any): Teacher => ({
-    id: teacher.id,
-    name: teacher.users.name,
-    username: teacher.users.username,
-    email: teacher.users.email,
-    department: teacher.department,
-    subjects: teacher.subject_assignments.map((sa: any) => sa.subjects.name),
-    hasSetPassword: true,
-  }));
-}
+  // Log the raw data for debugging
+  console.log("Raw teacher data from API:", data)
 
-export async function addTeacher(teacher: Omit<Teacher, 'id' | 'hasSetPassword' | 'subjects' | 'password'>) {
-  const { data: userData, error: userError } = await supabase
-    .from('users')
-    .insert({
+  return data.map(
+    (teacher: any): Teacher => ({
+      id: teacher._id,
+      name: teacher.name,
       username: teacher.username,
       email: teacher.email,
-      name: teacher.name,
-      role: 'teacher',
-    })
-    .select()
-    .single();
+      subjects: teacher.subjects || [],
+      hasSetPassword: teacher.hasSetPassword,
+    }),
+  )
+}
 
-  if (userError) {
-    throw new Error('Failed to create user');
-  }
-
-  const { error: teacherError } = await supabase
-    .from('teachers')
-    .insert({
-      user_id: userData.id,
-      department: teacher.department,
-    });
-
-  if (teacherError) {
-    throw new Error('Failed to create teacher');
-  }
+export async function addTeacher(
+  teacher: Omit<Teacher, "id" | "hasSetPassword" | "subjects" | "password" | "department">,
+) {
+  const { data } = await axios.post(`${API_URL}/teachers`, teacher, {
+    headers: {
+      Authorization: `Bearer ${localStorage.getItem("token")}`,
+    },
+  })
+  return data
 }
 
 export async function updateTeacher(id: string, teacher: Partial<Teacher>) {
-  const { error } = await supabase
-    .from('teachers')
-    .update({
-      department: teacher.department,
-    })
-    .eq('id', id);
-
-  if (error) {
-    throw new Error('Failed to update teacher');
-  }
+  const { data } = await axios.put(`${API_URL}/teachers/${id}`, teacher, {
+    headers: {
+      Authorization: `Bearer ${localStorage.getItem("token")}`,
+    },
+  })
+  return data
 }
 
 export async function deleteTeacher(id: string) {
-  const { error } = await supabase
-    .from('teachers')
-    .delete()
-    .eq('id', id);
-
-  if (error) {
-    throw new Error('Failed to delete teacher');
-  }
+  const { data } = await axios.delete(`${API_URL}/teachers/${id}`, {
+    headers: {
+      Authorization: `Bearer ${localStorage.getItem("token")}`,
+    },
+  })
+  return data
 }
+

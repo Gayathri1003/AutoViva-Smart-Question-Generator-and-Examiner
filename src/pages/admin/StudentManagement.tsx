@@ -1,27 +1,33 @@
-import React, { useState } from 'react';
-import { UserPlus } from 'lucide-react';
-import StudentForm from './components/StudentForm';
-import StudentTable from './components/StudentTable';
-import StudentFilters from './components/StudentFilters';
-import { useStudentStore } from '../../store/studentStore';
+"use client"
+
+import { useState, useEffect } from "react"
+import { UserPlus } from "lucide-react"
+import StudentForm from "./components/StudentForm"
+import StudentTable from "./components/StudentTable"
+import StudentFilters from "./components/StudentFilters"
+import { useStudentStore } from "../../store/studentStore"
 
 const StudentManagement = () => {
-  const [showAddModal, setShowAddModal] = useState(false);
-  const [editingStudent, setEditingStudent] = useState<any>(null);
+  const [showAddModal, setShowAddModal] = useState(false)
+  const [editingStudent, setEditingStudent] = useState<any>(null)
   const [filters, setFilters] = useState({
-    department: '',
-    semester: '',
-    class: '',
-  });
+    department: "",
+    semester: "",
+    class: "",
+  })
 
-  const { students } = useStudentStore();
+  const { students, fetchStudents } = useStudentStore()
+
+  useEffect(() => {
+    fetchStudents()
+  }, [fetchStudents])
 
   const filteredStudents = students.filter((student) => {
-    if (filters.department && student.department !== filters.department) return false;
-    if (filters.semester && student.semester !== filters.semester) return false;
-    if (filters.class && student.class !== filters.class) return false;
-    return true;
-  });
+    if (filters.department && student.department !== filters.department) return false
+    if (filters.semester && student.semester !== filters.semester) return false
+    if (filters.class && student.class !== filters.class) return false
+    return true
+  })
 
   return (
     <div className="space-y-6">
@@ -36,27 +42,22 @@ const StudentManagement = () => {
         </button>
       </div>
 
-      <StudentFilters
-        filters={filters}
-        onChange={setFilters}
-      />
+      <StudentFilters filters={filters} onChange={setFilters} />
 
-      <StudentTable
-        students={filteredStudents}
-        onEdit={setEditingStudent}
-      />
+      <StudentTable students={filteredStudents} onEdit={setEditingStudent} />
 
       {(showAddModal || editingStudent) && (
         <StudentForm
           student={editingStudent}
           onClose={() => {
-            setShowAddModal(false);
-            setEditingStudent(null);
+            setShowAddModal(false)
+            setEditingStudent(null)
           }}
         />
       )}
     </div>
-  );
-};
+  )
+}
 
 export default StudentManagement
+

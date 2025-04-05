@@ -1,70 +1,91 @@
-import { create } from 'zustand';
-import { Student } from '../types';
+import { create } from "zustand"
+import * as api from "../lib/api/students"
+import type { Student } from "../types"
 
 interface StudentState {
-  students: Student[];
-  addStudent: (student: Omit<Student, 'id'>) => Promise<void>;
-  updateStudent: (id: string, student: Partial<Student>) => Promise<void>;
-  deleteStudent: (id: string) => Promise<void>;
-  isUsernameUnique: (username: string) => boolean;
+  students: Student[]
+  loading: boolean
+  error: string | null
+  fetchStudents: () => Promise<void>
+  addStudent: (student: Omit<Student, "id">) => Promise<void>
+  updateStudent: (id: string, student: Partial<Student>) => Promise<void>
+  deleteStudent: (id: string) => Promise<void>
+  getStudentsByClass: (className: string) => Student[]
+  getStudentsBySemester: (semester: string) => Student[]
 }
 
 export const useStudentStore = create<StudentState>((set, get) => ({
   students: [],
+  loading: false,
+  error: null,
 
-  addStudent: async (studentData) => {
-    const { students, isUsernameUnique } = get();
-    if (!isUsernameUnique(studentData.username)) {
-      throw new Error('Username already exists');
-    }
-
+  fetchStudents: async () => {
+    set({ loading: true, error: null })
     try {
-      const newStudent: Student = {
-        id: Date.now().toString(),
-        ...studentData,
-      };
-
-      set({ students: [...students, newStudent] });
+      const students = await api.getAllStudents()
+      // Ensure each student has the required properties
+      const processedStudents = students.map((student: any) => ({
+        id: student._id || student.id,
+        name: student.name,
+        username: student.username,
+        email: student.email || "",
+        class: student.class || "",
+        semester: student.semester || "",
+        department: student.department || "",
+        rollNumber: student.rollNumber || "",
+      }))
+      set({ students: processedStudents, loading: false })
     } catch (error) {
-      throw new Error('Failed to add student');
+      console.error("Error fetching students:", error)
+      set({ error: "Failed to fetch students", loading: false })
     }
   },
 
-  updateStudent: async (id, studentData) => {
-    const { students, isUsernameUnique } = get();
-    const studentToUpdate = students.find((student) => student.id === id);
-
-    if (
-      studentData.username &&
-      studentToUpdate?.username !== studentData.username &&
-      !isUsernameUnique(studentData.username)
-    ) {
-      throw new Error('Username already exists');
-    }
-
+  addStudent: async (student) => {
+    set({ loading: true, error: null })
     try {
-      set({
-        students: students.map((student) =>
-          student.id === id ? { ...student, ...studentData } : student
-        ),
-      });
+      const newStudent = await api.createStudent(student)
+      set((state) => ({
+        students: [...state.students, newStudent],
+        loading: false,
+      }))
     } catch (error) {
-      throw new Error('Failed to update student');
+      set({ error: "Failed to add student", loading: false })
+    }
+  },
+
+  updateStudent: async (id, student) => {
+    set({ loading: true, error: null })
+    try {
+      const updatedStudent = await api.updateStudent(id, student)
+      set((state) => ({
+        students: state.students.map((s) => (s.id === id ? { ...s, ...updatedStudent } : s)),
+        loading: false,
+      }))
+    } catch (error) {
+      set({ error: "Failed to update student", loading: false })
     }
   },
 
   deleteStudent: async (id) => {
+    set({ loading: true, error: null })
     try {
+      await api.deleteStudent(id)
       set((state) => ({
-        students: state.students.filter((student) => student.id !== id),
-      }));
+        students: state.students.filter((s) => s.id !== id),
+        loading: false,
+      }))
     } catch (error) {
-      throw new Error('Failed to delete student');
+      set({ error: "Failed to delete student", loading: false })
     }
   },
 
-  isUsernameUnique: (username) => {
-    const { students } = get();
-    return !students.some((student) => student.username === username);
+  getStudentsByClass: (className) => {
+    return get().students.filter((student) => student.class === className)
   },
-}));
+
+  getStudentsBySemester: (semester) => {
+    return get().students.filter((student) => student.semester === semester)
+  },
+}))
+

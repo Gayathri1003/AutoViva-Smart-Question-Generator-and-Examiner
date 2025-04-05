@@ -1,94 +1,68 @@
-import { supabase } from '../supabase';
-import { Student } from '../../types';
+import axios from "axios"
+import type { Student } from "../../types"
 
-export async function getStudents() {
-  const { data, error } = await supabase
-    .from('students')
-    .select(`
-      id,
-      users (
-        id,
-        name,
-        username,
-        email
-      ),
-      department,
-      semester,
-      class,
-      batch
-    `);
+const API_URL = "http://localhost:5000/api"
 
-  if (error) {
-    throw new Error('Failed to fetch students');
-  }
-
-  return data.map((student: any): Student => ({
-    id: student.id,
-    name: student.users.name,
-    username: student.users.username,
-    email: student.users.email,
-    department: student.department,
-    semester: student.semester.toString(),
-    class: student.class,
-    batch: student.batch,
-    hasSetPassword: true,
-  }));
+export async function getAllStudents() {
+  const { data } = await axios.get(`${API_URL}/students`, {
+    headers: {
+      Authorization: `Bearer ${localStorage.getItem("token")}`,
+    },
+  })
+  return data
 }
 
-export async function addStudent(student: Omit<Student, 'id' | 'hasSetPassword' | 'password'>) {
-  const { data: userData, error: userError } = await supabase
-    .from('users')
-    .insert({
-      username: student.username,
-      email: student.email,
-      name: student.name,
-      role: 'student',
-    })
-    .select()
-    .single();
+export async function getStudentById(id: string) {
+  const { data } = await axios.get(`${API_URL}/students/${id}`, {
+    headers: {
+      Authorization: `Bearer ${localStorage.getItem("token")}`,
+    },
+  })
+  return data
+}
 
-  if (userError) {
-    throw new Error('Failed to create user');
-  }
-
-  const { error: studentError } = await supabase
-    .from('students')
-    .insert({
-      user_id: userData.id,
-      department: student.department,
-      semester: parseInt(student.semester),
-      class: student.class,
-      batch: student.batch,
-    });
-
-  if (studentError) {
-    throw new Error('Failed to create student');
-  }
+export async function createStudent(student: Omit<Student, "id">) {
+  const { data } = await axios.post(`${API_URL}/students`, student, {
+    headers: {
+      Authorization: `Bearer ${localStorage.getItem("token")}`,
+    },
+  })
+  return data
 }
 
 export async function updateStudent(id: string, student: Partial<Student>) {
-  const { error } = await supabase
-    .from('students')
-    .update({
-      department: student.department,
-      semester: student.semester ? parseInt(student.semester) : undefined,
-      class: student.class,
-      batch: student.batch,
-    })
-    .eq('id', id);
-
-  if (error) {
-    throw new Error('Failed to update student');
-  }
+  const { data } = await axios.put(`${API_URL}/students/${id}`, student, {
+    headers: {
+      Authorization: `Bearer ${localStorage.getItem("token")}`,
+    },
+  })
+  return data
 }
 
 export async function deleteStudent(id: string) {
-  const { error } = await supabase
-    .from('students')
-    .delete()
-    .eq('id', id);
-
-  if (error) {
-    throw new Error('Failed to delete student');
-  }
+  const { data } = await axios.delete(`${API_URL}/students/${id}`, {
+    headers: {
+      Authorization: `Bearer ${localStorage.getItem("token")}`,
+    },
+  })
+  return data
 }
+
+export async function getStudentsByClass(className: string) {
+  const { data } = await axios.get(`${API_URL}/students/class/${className}`, {
+    headers: {
+      Authorization: `Bearer ${localStorage.getItem("token")}`,
+    },
+  })
+  return data
+}
+
+export async function getStudentsBySemester(semester: string) {
+  const { data } = await axios.get(`${API_URL}/students/semester/${semester}`, {
+    headers: {
+      Authorization: `Bearer ${localStorage.getItem("token")}`,
+    },
+  })
+  return data
+}
+

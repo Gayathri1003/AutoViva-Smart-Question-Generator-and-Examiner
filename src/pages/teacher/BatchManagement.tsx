@@ -80,7 +80,7 @@ const BatchManagement = () => {
               placeholder="Search students..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10 w-full rounded-md border-gray-300 shadow-sm focus:ring-indigo-500 focus:ring-indigo-500"
+              className="pl-10 w-full rounded-md border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
             />
           </div>
 

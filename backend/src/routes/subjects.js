@@ -1,10 +1,22 @@
-const express = require('express');
-const router = express.Router();
-const { auth } = require('../middleware/auth');
-const subjectController = require('../controllers/subjectController');
+const express = require("express")
+const router = express.Router()
+const { auth } = require("../middleware/auth")
+const subjectController = require("../controllers/subjectController")
 
-router.post('/', auth, subjectController.createSubject);
-router.get('/teacher', auth, subjectController.getTeacherSubjects);
-router.post('/assign-teacher', auth, subjectController.assignTeacher);
+// Create a new subject
+router.post("/", auth, subjectController.createSubject)
 
-module.exports = router;
+// Get all subjects
+router.get("/", auth, subjectController.getAllSubjects)
+
+// Get subjects for the logged-in teacher
+router.get("/teacher", auth, subjectController.getTeacherSubjects)
+
+// Assign a teacher to a subject
+router.post("/assign-teacher", auth, subjectController.assignTeacher)
+
+// Remove a teacher from a subject
+router.post("/remove-teacher", auth, subjectController.removeTeacher)
+
+module.exports = router
+

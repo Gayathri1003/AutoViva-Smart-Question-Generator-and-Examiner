@@ -10,23 +10,17 @@ interface SubjectCardProps {
 const SubjectCard: React.FC<SubjectCardProps> = ({ assignment }) => {
   const navigate = useNavigate();
 
-  const handleGenerateQuestions = (e: React.MouseEvent) => {
-    e.stopPropagation(); // Prevent card click event
-    navigate(`/teacher/subject/${assignment.id}/questions`);
+  const handleGenerateQuestions = () => {
+    navigate('/teacher/questions', {
+      state: {
+        subjectId: assignment.id,
+        subjectName: assignment.subjectName
+      }
+    });
   };
 
   const handleViewSubject = () => {
     navigate(`/teacher/subject/${assignment.id}`);
-  };
-
-  const handleSetupExam = (e: React.MouseEvent) => {
-    e.stopPropagation(); // Prevent card click event
-    navigate(`/teacher/subject/${assignment.id}/exam-setup`);
-  };
-
-  const handleBatchManagement = (e: React.MouseEvent) => {
-    e.stopPropagation(); // Prevent card click event
-    navigate(`/teacher/subject/${assignment.id}/batches`);
   };
 
   return (
@@ -68,30 +62,29 @@ const SubjectCard: React.FC<SubjectCardProps> = ({ assignment }) => {
           </div>
         </div>
 
-        <div className="mt-6 grid grid-cols-2 gap-3">
+        <div className="mt-6 flex space-x-4">
           <button
-            onClick={handleGenerateQuestions}
-            className="flex items-center justify-center px-3 py-2 text-sm font-medium text-indigo-600 bg-indigo-50 rounded-md hover:bg-indigo-100 transition-colors"
+            onClick={(e) => {
+              e.stopPropagation();
+              navigate(`/teacher/subject/${assignment.id}/exam-setup`);
+            }}
+            className="flex-1 px-4 py-2 text-sm font-medium text-indigo-600 bg-indigo-50 rounded-md hover:bg-indigo-100"
           >
-            <Icons.FileText className="w-4 h-4 mr-2" />
-            Generate Questions
-          </button>
-          <button
-            onClick={handleSetupExam}
-            className="flex items-center justify-center px-3 py-2 text-sm font-medium text-green-600 bg-green-50 rounded-md hover:bg-green-100 transition-colors"
-          >
-            <Icons.Plus className="w-4 h-4 mr-2" />
             Setup Exam
           </button>
           <button
-            onClick={handleBatchManagement}
-            className="flex items-center justify-center px-3 py-2 text-sm font-medium text-blue-600 bg-blue-50 rounded-md hover:bg-blue-100 transition-colors col-span-2"
+            onClick={(e) => {
+              e.stopPropagation();
+              handleGenerateQuestions();
+            }}
+            className="flex-1 px-4 py-2 text-sm font-medium text-green-600 bg-green-50 rounded-md hover:bg-green-100"
           >
-            <Icons.Users className="w-4 h-4 mr-2" />
-            Manage Batches
+            Generate Questions
           </button>
         </div>
       </div>
     </div>
   );
 };
+
+export default SubjectCard;

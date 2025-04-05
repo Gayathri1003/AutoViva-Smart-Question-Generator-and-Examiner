@@ -1,45 +1,65 @@
-import React from 'react';
-import { useAuthStore } from '../../../store/authStore';
-import { useExamStore } from '../../../store/examStore';
-import { Clock, Calendar } from 'lucide-react';
+"use client"
+
+import { useState, useEffect } from "react"
+import { useAuthStore } from "../../../store/authStore"
+import { useExamStore } from "../../../store/examStore"
+import { Clock, Calendar } from "lucide-react"
+import ExamDetailsView from "./ExamDetailsView"
 
 const DeployedExams = () => {
-  const { user } = useAuthStore();
-  const { exams } = useExamStore();
+  const { user } = useAuthStore()
+  const { exams } = useExamStore()
+  const [selectedExam, setSelectedExam] = useState(null)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    // Simulate loading exams
+    const timer = setTimeout(() => {
+      setLoading(false)
+    }, 1000)
+
+    return () => clearTimeout(timer)
+  }, [])
 
   // Filter exams for the current teacher
-  const teacherExams = exams.filter(exam => exam.teacher_id === user?.id);
+  const teacherExams = exams.filter((exam) => exam.teacher_id === user?.id)
 
   // Sort exams by start time
-  const sortedExams = [...teacherExams].sort((a, b) => 
-    new Date(b.start_time).getTime() - new Date(a.start_time).getTime()
-  );
+  const sortedExams = [...teacherExams].sort(
+    (a, b) => new Date(b.start_time).getTime() - new Date(a.start_time).getTime(),
+  )
 
   const getExamStatus = (startTime: string, endTime: string) => {
-    const now = new Date();
-    const start = new Date(startTime);
-    const end = new Date(endTime);
+    const now = new Date()
+    const start = new Date(startTime)
+    const end = new Date(endTime)
 
-    if (now < start) return { label: 'Upcoming', className: 'bg-yellow-100 text-yellow-800' };
-    if (now > end) return { label: 'Completed', className: 'bg-gray-100 text-gray-800' };
-    return { label: 'Active', className: 'bg-green-100 text-green-800' };
-  };
+    if (now < start) return { label: "Upcoming", className: "bg-yellow-100 text-yellow-800" }
+    if (now > end) return { label: "Completed", className: "bg-gray-100 text-gray-800" }
+    return { label: "Active", className: "bg-green-100 text-green-800" }
+  }
+
+  if (loading) {
+    return <div className="text-center py-4">Loading exams...</div>
+  }
 
   return (
     <div className="space-y-4">
       <h2 className="text-xl font-semibold text-gray-900">Deployed Exams</h2>
-      
+
       {sortedExams.length === 0 ? (
-        <div className="bg-white rounded-lg shadow p-6 text-center text-gray-500">
-          No exams deployed yet
-        </div>
+        <div className="bg-white rounded-lg shadow p-6 text-center text-gray-500">No exams deployed yet</div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {sortedExams.map(exam => {
-            const status = getExamStatus(exam.start_time, exam.end_time);
-            
+          {sortedExams.map((exam) => {
+            const status = getExamStatus(exam.start_time, exam.end_time)
+
             return (
-              <div key={exam.id} className="bg-white rounded-lg shadow p-6">
+              <div
+                key={exam.id}
+                className="bg-white rounded-lg shadow p-6 cursor-pointer hover:shadow-md transition-shadow"
+                onClick={() => setSelectedExam(exam)}
+              >
                 <div className="flex justify-between items-start">
                   <div>
                     <h3 className="text-lg font-medium text-gray-900">{exam.title}</h3>
@@ -77,12 +97,15 @@ const DeployedExams = () => {
                   </div>
                 </div>
               </div>
-            );
+            )
           })}
         </div>
       )}
-    </div>
-  );
-};
 
-export default DeployedExams;
+      {selectedExam && <ExamDetailsView exam={selectedExam} onClose={() => setSelectedExam(null)} />}
+    </div>
+  )
+}
+
+export default DeployedExams
+

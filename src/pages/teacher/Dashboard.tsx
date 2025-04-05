@@ -1,148 +1,53 @@
-import { Routes, Route, useNavigate } from 'react-router-dom';
-import { useAuthStore } from '../../store/authStore';
-import { useTeacherStore } from '../../store/teacherStore';
-import SubjectList from './components/SubjectList';
-import DeployedExams from './components/DeployedExams';
-import QuestionGenerator from './QuestionGenerator';
-import ResultsView from './ResultsView';
-import QuestionSetup from './exam/QuestionSetup';
-import SubjectDashboard from './SubjectDashboard';
-import BatchManagement from './BatchManagement';
-import { useQuestionStore } from '../../store/questionStore';
-import toast from 'react-hot-toast';
-import { FileText, Plus, BookOpen } from 'lucide-react';
+"use client"
+
+import { useEffect, useState } from "react"
+import { Routes, Route } from "react-router-dom"
+import { useTeacherStore } from "../../store/teacherStore"
+import { useAuthStore } from "../../store/authStore"
+import SubjectList from "./components/SubjectList"
+import QuestionGenerator from "./QuestionGenerator"
+import ResultsView from "./ResultsView"
+import QuestionSetup from "./exam/QuestionSetup"
+import DeployedExams from "./components/DeployedExams"
+import SubjectDashboard from "./SubjectDashboard"
+import BatchManagement from "./BatchManagement"
 
 const TeacherDashboard = () => {
-  const { user } = useAuthStore();
-  const { getTeacherAssignments } = useTeacherStore();
-  const { questionsToDeploy } = useQuestionStore();
-  const navigate = useNavigate();
+  const { user } = useAuthStore()
+  const { fetchTeachers, fetchSubjects } = useTeacherStore()
+  const [loading, setLoading] = useState(true)
 
-  const assignments = user ? getTeacherAssignments(user.id) : [];
+  // Fetch teacher's assigned subjects when the dashboard loads
+  useEffect(() => {
+    const loadData = async () => {
+      setLoading(true)
+      try {
+        if (user && user.id) {
+          await fetchTeachers()
+          await fetchSubjects()
+        }
+      } catch (error) {
+        console.error("Failed to load teacher data:", error)
+      } finally {
+        setLoading(false)
+      }
+    }
 
-  const handleProceedToSetup = () => {
-    if (questionsToDeploy.length === 0) {
-      toast.error('No questions selected for deployment');
-      return;
-    }
-    
-    const subjectId = questionsToDeploy[0]?.subject_id;
-    if (!subjectId) {
-      toast.error('Subject ID is missing from selected questions');
-      return;
-    }
-    navigate(`/teacher/subject/${subjectId}/exam-setup`);
-  };
+    loadData()
+  }, [fetchTeachers, fetchSubjects, user])
+
+  if (loading) {
+    return <div className="text-center py-8">Loading dashboard...</div>
+  }
 
   return (
     <Routes>
       <Route
         index
         element={
-          <div className="space-y-6 p-6">
-            <div className="flex justify-between items-center">
-              <h1 className="text-2xl font-bold text-gray-900">Teacher Dashboard</h1>
-              <button
-                onClick={() => navigate('/teacher/questions')}
-                className="flex items-center px-4 py-2 text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 transition-colors"
-              >
-                <FileText className="w-5 h-5 mr-2" />
-                Generate Questions
-              </button>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {assignments.map((assignment) => (
-                <div
-                  key={assignment.id}
-                  className="bg-white rounded-lg shadow-sm p-6 hover:shadow-md transition-shadow cursor-pointer"
-                  onClick={() => navigate(`/teacher/subject/${assignment.id}`)}
-                >
-                  <h2 className="text-lg font-semibold text-gray-900">{assignment.subjectName}</h2>
-                  <p className="text-sm text-gray-500 mt-1">{assignment.subjectCode}</p>
-                  <div className="mt-4 space-y-2 text-sm text-gray-600">
-                    <p>Class: {assignment.class}</p>
-                    <p>Semester: {assignment.semester}</p>
-                    <p>Department: {assignment.department}</p>
-                  </div>
-                  <span className={`mt-4 inline-block px-2 py-1 text-xs font-medium rounded-full ${
-                    assignment.isLab ? 'bg-green-100 text-green-800' : 'bg-blue-100 text-blue-800'
-                  }`}>
-                    {assignment.isLab ? 'Lab' : 'Theory'}
-                  </span>
-                  <div className="mt-4 flex space-x-3">
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        navigate(`/teacher/subject/${assignment.id}/questions`);
-                      }}
-                      className="flex items-center px-3 py-2 text-sm font-medium text-indigo-600 bg-indigo-50 rounded-md hover:bg-indigo-100"
-                    >
-                      <FileText className="w-4 h-4 mr-2" />
-                      Generate Questions
-                    </button>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        navigate(`/teacher/subject/${assignment.id}/exam-setup`);
-                      }}
-                      className="flex items-center px-3 py-2 text-sm font-medium text-green-600 bg-green-50 rounded-md hover:bg-green-100"
-                    >
-                      <Plus className="w-4 h-4 mr-2" />
-                      Setup Exam
-                    </button>
-                  </div>
-                </div>
-              ))}
-
-              {assignments.length === 0 && (
-                <div className="col-span-full text-center py-12">
-                  <BookOpen className="mx-auto h-12 w-12 text-gray-400" />
-                  <h3 className="mt-2 text-sm font-medium text-gray-900">No Subjects Assigned</h3>
-                  <p className="mt-1 text-sm text-gray-500">
-                    You haven't been assigned any subjects yet.
-                  </p>
-                </div>
-              )}
-            </div>
-
+          <div className="space-y-6">
+            <SubjectList />
             <DeployedExams />
-
-            {questionsToDeploy.length > 0 && (
-              <div className="bg-white rounded-lg shadow-sm p-6">
-                <h2 className="text-lg font-bold mb-4">Questions Selected for Deployment</h2>
-                <ul className="space-y-4">
-                  {questionsToDeploy.map((question, index) => (
-                    <li key={question.id} className="p-4 bg-gray-50 rounded-lg">
-                      <p className="font-medium">{index + 1}. {question.text}</p>
-                      <div className="mt-2 grid grid-cols-2 gap-2">
-                        {question.options.map((option, idx) => (
-                          <p
-                            key={idx}
-                            className={
-                              question.correct_answer === String.fromCharCode(65 + idx)
-                                ? 'text-green-600'
-                                : ''
-                            }
-                          >
-                            {String.fromCharCode(65 + idx)}. {option}
-                          </p>
-                        ))}
-                      </div>
-                      <p className="mt-2 text-sm text-gray-500">
-                        Difficulty: {question.difficulty}
-                      </p>
-                    </li>
-                  ))}
-                </ul>
-                <button
-                  onClick={handleProceedToSetup}
-                  className="mt-4 w-full flex justify-center items-center px-4 py-2 text-white bg-indigo-600 rounded-lg hover:bg-indigo-700"
-                >
-                  Proceed to Exam Setup
-                </button>
-              </div>
-            )}
           </div>
         }
       />
@@ -152,7 +57,8 @@ const TeacherDashboard = () => {
       <Route path="subject/:subjectId/*" element={<SubjectDashboard />} />
       <Route path="subject/:subjectId/exam-setup" element={<QuestionSetup />} />
     </Routes>
-  );
-};
+  )
+}
 
-export default TeacherDashboard;
+export default TeacherDashboard
+

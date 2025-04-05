@@ -1,55 +1,77 @@
-import React, { useState } from 'react';
-import { useAuthStore } from '../../../store/authStore';
-import { useStudentStore } from '../../../store/studentStore';
-import { useBatchStore } from '../../../store/batchStore';
-import { Student } from '../../../types';
-import { Search, Users } from 'lucide-react';
+"use client"
+
+import type React from "react"
+import { useState, useEffect } from "react"
+import { useAuthStore } from "../../../store/authStore"
+import { useStudentStore } from "../../../store/studentStore"
+import { useBatchStore } from "../../../store/batchStore"
+import type { Student } from "../../../types"
+import { Search } from "lucide-react"
 
 interface BatchManagementProps {
-  subjectId: string;
-  class_: string;
-  semester: string;
+  subjectId: string
+  class_: string
+  semester: string
 }
 
-const BatchManagement: React.FC<BatchManagementProps> = ({ 
-  subjectId, 
-  class_,
-  semester 
-}) => {
-  const { user } = useAuthStore();
-  const { students } = useStudentStore();
-  const { assignBatch, getBatchAssignments, getStudentBatch } = useBatchStore();
-  const [searchQuery, setSearchQuery] = useState('');
-  const [selectedBatch, setSelectedBatch] = useState<number | null>(null);
+const BatchManagement: React.FC<BatchManagementProps> = ({ subjectId, class_, semester }) => {
+  const { user } = useAuthStore()
+  const { students, fetchStudents } = useStudentStore()
+  const { assignBatch, getStudentBatch } = useBatchStore()
+  const [searchQuery, setSearchQuery] = useState("")
+  const [selectedBatch, setSelectedBatch] = useState<number | null>(null)
+  const [loading, setLoading] = useState(false)
+
+  // Fetch students when component mounts
+  useEffect(() => {
+    const loadData = async () => {
+      setLoading(true)
+      try {
+        await fetchStudents()
+      } catch (error) {
+        console.error("Error loading students:", error)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    loadData()
+  }, [fetchStudents])
 
   // Filter students by class and semester
-  const classStudents = students.filter(
-    student => 
-      student.class === class_ && 
-      student.semester === semester
-  );
+  const classStudents = students.filter((student) => student.class === class_ && student.semester === semester)
 
   // Filter students by search query
-  const filteredStudents = classStudents.filter(student =>
-    student.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    student.username.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredStudents = classStudents.filter(
+    (student) =>
+      student.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      student.username.toLowerCase().includes(searchQuery.toLowerCase()),
+  )
+
+  // Filter by selected batch if one is selected
+  const displayedStudents = selectedBatch
+    ? filteredStudents.filter((student) => getStudentBatch(student.id, subjectId) === selectedBatch)
+    : filteredStudents
 
   const handleBatchAssignment = (student: Student, batchNumber: number) => {
+    if (!user) return
+
     assignBatch({
-      teacherId: user!.id,
+      teacherId: user.id,
       subjectId,
       studentId: student.id,
       class: class_,
       batchNumber,
-    });
-  };
+    })
+  }
 
   const getBatchStudents = (batchNumber: number) => {
-    return filteredStudents.filter(
-      student => getStudentBatch(student.id, subjectId) === batchNumber
-    );
-  };
+    return filteredStudents.filter((student) => getStudentBatch(student.id, subjectId) === batchNumber)
+  }
+
+  if (loading) {
+    return <div className="text-center py-8">Loading students...</div>
+  }
 
   return (
     <div className="space-y-6">
@@ -67,13 +89,15 @@ const BatchManagement: React.FC<BatchManagementProps> = ({
             />
           </div>
           <select
-            value={selectedBatch || ''}
+            value={selectedBatch || ""}
             onChange={(e) => setSelectedBatch(e.target.value ? Number(e.target.value) : null)}
             className="border border-gray-300 rounded-md px-4 py-2 focus:ring-indigo-500 focus:border-indigo-500"
           >
             <option value="">All Batches</option>
             {[1, 2, 3, 4].map((batch) => (
-              <option key={batch} value={batch}>Batch {batch}</option>
+              <option key={batch} value={batch}>
+                Batch {batch}
+              </option>
             ))}
           </select>
         </div>
@@ -88,20 +112,14 @@ const BatchManagement: React.FC<BatchManagementProps> = ({
                 {getBatchStudents(batchNumber).length} students
               </span>
             </div>
-            <div className="space-y-3">
+            <div className="space-y-3 max-h-60 overflow-y-auto">
               {getBatchStudents(batchNumber).map((student) => (
-                <div
-                  key={student.id}
-                  className="flex items-center justify-between p-2 bg-gray-50 rounded-md"
-                >
+                <div key={student.id} className="flex items-center justify-between p-2 bg-gray-50 rounded-md">
                   <div>
                     <p className="font-medium text-gray-900">{student.name}</p>
                     <p className="text-sm text-gray-500">{student.username}</p>
                   </div>
-                  <button
-                    onClick={() => handleBatchAssignment(student, 0)}
-                    className="text-red-600 hover:text-red-800"
-                  >
+                  <button onClick={() => handleBatchAssignment(student, 0)} className="text-red-600 hover:text-red-800">
                     Remove
                   </button>
                 </div>
@@ -110,21 +128,21 @@ const BatchManagement: React.FC<BatchManagementProps> = ({
             <div className="mt-4">
               <select
                 onChange={(e) => {
-                  const studentId = e.target.value;
+                  const studentId = e.target.value
                   if (studentId) {
-                    const student = filteredStudents.find(s => s.id === studentId);
+                    const student = filteredStudents.find((s) => s.id === studentId)
                     if (student) {
-                      handleBatchAssignment(student, batchNumber);
+                      handleBatchAssignment(student, batchNumber)
                     }
-                    e.target.value = ''; // Reset select after assignment
+                    e.target.value = "" // Reset select after assignment
                   }
                 }}
                 className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-indigo-500 focus:border-indigo-500"
               >
                 <option value="">Add student to batch...</option>
                 {filteredStudents
-                  .filter(student => !getStudentBatch(student.id, subjectId))
-                  .map(student => (
+                  .filter((student) => !getStudentBatch(student.id, subjectId))
+                  .map((student) => (
                     <option key={student.id} value={student.id}>
                       {student.name} ({student.username})
                     </option>
@@ -139,31 +157,30 @@ const BatchManagement: React.FC<BatchManagementProps> = ({
       <div className="mt-8">
         <h3 className="text-lg font-medium text-gray-900 mb-4">Unassigned Students</h3>
         <div className="bg-white rounded-lg shadow-md p-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 max-h-80 overflow-y-auto">
             {filteredStudents
-              .filter(student => !getStudentBatch(student.id, subjectId))
-              .map(student => (
-                <div
-                  key={student.id}
-                  className="flex items-center justify-between p-3 bg-gray-50 rounded-md"
-                >
+              .filter((student) => !getStudentBatch(student.id, subjectId))
+              .map((student) => (
+                <div key={student.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-md">
                   <div>
                     <p className="font-medium text-gray-900">{student.name}</p>
                     <p className="text-sm text-gray-500">{student.username}</p>
                   </div>
                   <select
                     onChange={(e) => {
-                      const batchNumber = Number(e.target.value);
+                      const batchNumber = Number(e.target.value)
                       if (batchNumber) {
-                        handleBatchAssignment(student, batchNumber);
+                        handleBatchAssignment(student, batchNumber)
                       }
-                      e.target.value = ''; // Reset select after assignment
+                      e.target.value = "" // Reset select after assignment
                     }}
                     className="border border-gray-300 rounded-md px-3 py-2 focus:ring-indigo-500 focus:border-indigo-500"
                   >
                     <option value="">Assign to batch...</option>
-                    {[1, 2, 3, 4].map(batch => (
-                      <option key={batch} value={batch}>Batch {batch}</option>
+                    {[1, 2, 3, 4].map((batch) => (
+                      <option key={batch} value={batch}>
+                        Batch {batch}
+                      </option>
                     ))}
                   </select>
                 </div>
@@ -172,7 +189,8 @@ const BatchManagement: React.FC<BatchManagementProps> = ({
         </div>
       </div>
     </div>
-  );
-};
+  )
+}
 
-export default BatchManagement;
+export default BatchManagement
+

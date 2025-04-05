@@ -1,32 +1,38 @@
-import React, { useState } from 'react';
-import { UserPlus, Search, Pencil, Trash2 } from 'lucide-react';
-import TeacherForm from './components/TeacherForm';
-import { useTeacherStore } from '../../store/teacherStore';
-import toast from 'react-hot-toast';
+"use client"
+
+import { useState, useEffect } from "react"
+import { UserPlus, Search, Pencil, Trash2 } from "lucide-react"
+import TeacherForm from "./components/TeacherForm"
+import { useTeacherStore } from "../../store/teacherStore"
+import toast from "react-hot-toast"
 
 const TeacherManagement = () => {
-  const [showAddModal, setShowAddModal] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [editingTeacher, setEditingTeacher] = useState<any>(null);
+  const [showAddModal, setShowAddModal] = useState(false)
+  const [searchQuery, setSearchQuery] = useState("")
+  const [editingTeacher, setEditingTeacher] = useState<any>(null)
 
-  const { teachers, deleteTeacher } = useTeacherStore();
+  const { teachers, fetchTeachers, deleteTeacher } = useTeacherStore()
+
+  useEffect(() => {
+    fetchTeachers()
+  }, [fetchTeachers])
 
   const handleDeleteTeacher = async (teacherId: string) => {
-    if (window.confirm('Are you sure you want to delete this teacher?')) {
+    if (window.confirm("Are you sure you want to delete this teacher?")) {
       try {
-        await deleteTeacher(teacherId);
-        toast.success('Teacher deleted successfully');
+        await deleteTeacher(teacherId)
+        toast.success("Teacher deleted successfully")
       } catch (error) {
-        toast.error('Failed to delete teacher');
+        toast.error("Failed to delete teacher")
       }
     }
-  };
+  }
 
   const filteredTeachers = teachers.filter(
     (teacher) =>
       teacher.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      teacher.email.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+      teacher.email.toLowerCase().includes(searchQuery.toLowerCase()),
+  )
 
   return (
     <div className="space-y-6">
@@ -61,9 +67,13 @@ const TeacherManagement = () => {
           <thead className="bg-gray-50">
             <tr>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Username</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Username
+              </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Actions
+              </th>
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
@@ -80,10 +90,7 @@ const TeacherManagement = () => {
                     >
                       <Pencil className="w-5 h-5" />
                     </button>
-                    <button 
-                      onClick={() => handleDeleteTeacher(teacher.id)}
-                      className="text-red-600 hover:text-red-900"
-                    >
+                    <button onClick={() => handleDeleteTeacher(teacher.id)} className="text-red-600 hover:text-red-900">
                       <Trash2 className="w-5 h-5" />
                     </button>
                   </div>
@@ -99,13 +106,14 @@ const TeacherManagement = () => {
         <TeacherForm
           teacher={editingTeacher}
           onClose={() => {
-            setShowAddModal(false);
-            setEditingTeacher(null);
+            setShowAddModal(false)
+            setEditingTeacher(null)
           }}
         />
       )}
     </div>
-  );
-};
+  )
+}
 
-export default TeacherManagement;
+export default TeacherManagement
+
