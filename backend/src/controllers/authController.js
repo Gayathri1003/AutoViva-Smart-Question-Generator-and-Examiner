@@ -3,8 +3,8 @@ const Student = require("../models/Student")
 const jwt = require("jsonwebtoken")
 
 // Admin credentials (hardcoded)
-const ADMIN_USERNAME = "admin"
-const ADMIN_PASSWORD = "admin123"
+const ADMIN_USERNAME = "Admin"
+const ADMIN_PASSWORD = "Admin123"
 
 exports.login = async (req, res) => {
   try {

@@ -5,7 +5,7 @@ import ExamTimer from './ExamTimer';
 import ExamQuestion from './ExamQuestion';
 import { ChevronLeft, ChevronRight, Flag } from 'lucide-react';
 import toast from 'react-hot-toast';
-import { Exam, QuestionStatus } from '../../../types/exam';
+import { Exam, Question, QuestionStatus } from '../../../types/exam';
 
 interface ExamSessionProps {
   exam: Exam;
@@ -19,14 +19,14 @@ const ExamSession: React.FC<ExamSessionProps> = ({ exam, onClose }) => {
   const [answers, setAnswers] = useState<Record<string, number | null>>({});
   const [questionStatus, setQuestionStatus] = useState<QuestionStatus>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [tabSwitchCount, setTabSwitchCount] = useState(0);
-  const MAX_TAB_SWITCHES = 2;
 
+  // Randomize questions on initial load
   const [randomizedQuestions] = useState(() => {
     return [...exam.questions].sort(() => Math.random() - 0.5);
   });
 
   useEffect(() => {
+    // Initialize answers and status for all questions
     const initialAnswers: Record<string, number | null> = {};
     const initialStatus: QuestionStatus = {};
     randomizedQuestions.forEach(q => {
@@ -36,39 +36,15 @@ const ExamSession: React.FC<ExamSessionProps> = ({ exam, onClose }) => {
     setAnswers(initialAnswers);
     setQuestionStatus(initialStatus);
 
-    if (document.documentElement.requestFullscreen) {
-      document.documentElement.requestFullscreen();
-    }
-
+    // Set up auto-submit when end time is reached
     const endTime = new Date(exam.end_time).getTime();
     const timeUntilEnd = endTime - Date.now();
     if (timeUntilEnd > 0) {
-      const timeout = setTimeout(() => handleSubmit(true), timeUntilEnd);
+      const timeout = setTimeout(() => {
+        handleSubmit(true);
+      }, timeUntilEnd);
       return () => clearTimeout(timeout);
     }
-
-    const handleVisibilityChange = () => {
-      if (document.hidden) {
-        setTabSwitchCount(prev => {
-          const newCount = prev + 1;
-          if (newCount === MAX_TAB_SWITCHES) {
-            toast.error('Warning: One more tab switch will submit your exam!');
-          } else if (newCount > MAX_TAB_SWITCHES) {
-            handleSubmit(true);
-            toast.error('Exam submitted due to multiple tab switches!');
-          }
-          return newCount;
-        });
-      }
-    };
-
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-    return () => {
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
-      if (document.fullscreenElement && document.exitFullscreen) {
-        document.exitFullscreen();
-      }
-    };
   }, []);
 
   const currentQuestion = randomizedQuestions[currentQuestionIndex];
@@ -89,6 +65,7 @@ const ExamSession: React.FC<ExamSessionProps> = ({ exam, onClose }) => {
     if (isSubmitting) return;
 
     const unansweredCount = Object.values(answers).filter(a => a === null).length;
+    
     if (!isAutoSubmit && unansweredCount > 0) {
       const confirm = window.confirm(`You have ${unansweredCount} unanswered questions. Are you sure you want to submit?`);
       if (!confirm) return;
@@ -156,6 +133,7 @@ const ExamSession: React.FC<ExamSessionProps> = ({ exam, onClose }) => {
                 selectedAnswer={answers[currentQuestion.id]}
                 onAnswer={handleAnswer}
               />
+
               <div className="mt-6 flex justify-between">
                 <button
                   onClick={() => setCurrentQuestionIndex(prev => prev - 1)}
@@ -176,6 +154,7 @@ const ExamSession: React.FC<ExamSessionProps> = ({ exam, onClose }) => {
               </div>
             </div>
           </div>
+
           <div className="col-span-3">
             <div className="bg-white rounded-lg shadow-sm p-6">
               <h3 className="text-sm font-medium text-gray-900 mb-4">Question Navigator</h3>
@@ -199,10 +178,8 @@ const ExamSession: React.FC<ExamSessionProps> = ({ exam, onClose }) => {
                   </button>
                 ))}
               </div>
+
               <div className="mt-6 space-y-4">
-                <p className="text-sm text-red-600">
-                  Tab switches: {tabSwitchCount}/{MAX_TAB_SWITCHES}
-                </p>
                 <button
                   onClick={handleFlagQuestion}
                   disabled={isSubmitting}
@@ -219,6 +196,7 @@ const ExamSession: React.FC<ExamSessionProps> = ({ exam, onClose }) => {
                   {isSubmitting ? 'Submitting...' : 'Submit Exam'}
                 </button>
               </div>
+
               <div className="mt-6">
                 <h4 className="text-sm font-medium text-gray-900 mb-2">Legend</h4>
                 <div className="space-y-2 text-sm">
